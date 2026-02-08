@@ -1,65 +1,31 @@
 import { useEffect, useState } from 'react'
+import { getInitialPlanState, loadPlanState } from './scripts'
 
 type Props = {
   title?: string
 }
 
-const buildHeaderText = ({ pathValue }: { pathValue: string | null }) =>
+const buildHeaderText = ({ pathValue }: { pathValue?: string }) =>
   pathValue ? 'plan.md' : 'plan.md (Not Found)'
 
-const buildPathText = ({ pathValue }: { pathValue: string | null }) =>
+const buildPathText = ({ pathValue }: { pathValue?: string }) =>
   pathValue ? pathValue : '指定パス配下に存在しません。'
 
-type PlanPayload = {
-  content: string
-  path: string | null
-}
-
-type PlanState = {
-  content: string
-  path: string | null
-  error: string | null
-}
-
-const defaultState: PlanState = {
-  content: 'plan.md を読み込み中です。',
-  path: null,
-  error: null,
-}
-
-const fetchPlan = async (): Promise<PlanPayload> => {
-  const response = await fetch('/__plan')
-  if (!response.ok) {
-    throw new Error('plan.md の取得に失敗しました。')
-  }
-  return response.json()
-}
-
 export const App = ({ title = 'md-studio' }: Props) => {
-  const [planState, setPlanState] = useState<PlanState>(defaultState)
+  const [planState, setPlanState] = useState(getInitialPlanState)
 
   useEffect(() => {
     let mounted = true
 
-    const loadPlan = async () => {
-      try {
-        const payload = await fetchPlan()
-        if (mounted) {
-          setPlanState({ content: payload.content, path: payload.path, error: null })
-        }
-      } catch (error) {
-        if (mounted) {
-          setPlanState({
-            content: 'plan.md の読み込みに失敗しました。',
-            path: null,
-            error: error instanceof Error ? error.message : 'Unknown error',
-          })
-        }
+    const updatePlanState = async () => {
+      const nextState = await loadPlanState()
+      if (mounted) {
+        setPlanState(nextState)
       }
     }
 
-    const intervalId = window.setInterval(loadPlan, 1500)
-    loadPlan()
+    const intervalId = window.setInterval(updatePlanState, 1500)
+    updatePlanState()
 
     return () => {
       mounted = false
