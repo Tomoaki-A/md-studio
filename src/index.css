@@ -1,152 +1,28 @@
-:root {
-  font-family: "Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-  color: #1b1b1b;
-  background-color: #f7f4ee;
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  min-height: 100vh;
-}
-
-#root {
-  min-height: 100vh;
-}
-
-.app {
-  min-height: 100vh;
-  display: grid;
-  place-items: center;
-  padding: 48px 24px;
-}
-
-.app__card {
-  background: #ffffff;
-  border: 1px solid #e6dfd3;
-  border-radius: 16px;
-  padding: 32px;
-  width: 100%;
-  box-shadow: 0 20px 40px rgba(20, 16, 8, 0.08);
-  min-height: 100%;
-}
-
-.app__eyebrow {
-  margin: 0 0 8px;
-  color: #6b5d4e;
-  font-size: 0.9rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.app__title {
-  margin: 0 0 12px;
-  font-size: 2.2rem;
-}
-
-.app__lead {
-  margin: 0;
-  font-size: 1rem;
-  color: #3d3428;
-}
-
-.app__rules {
-  margin-top: 24px;
-  border-top: 1px solid #efe6d6;
-  padding-top: 16px;
-  display: grid;
-  gap: 12px;
-}
-
-.app__rules-header {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 0.9rem;
-  color: #5b4f43;
-}
-
-.app__rules-path {
-  font-size: 0.8rem;
-  color: #8b7a66;
-}
-
-.app__rules-body {
-  margin: 0;
-  background: #fbf8f2;
-  border: 1px solid #efe6d6;
-  border-radius: 12px;
-  padding: 16px;
-  font-family: "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-  font-size: 0.85rem;
-  line-height: 1.6;
-  color: #2e241c;
-  white-space: pre-wrap;
-}
-
-.app__rules-skeleton {
-  border: 1px solid #efe6d6;
-  border-radius: 12px;
-  padding: 16px;
-  background: #fbf8f2;
-  display: grid;
-  gap: 10px;
-}
-
-.app__rules-skeleton-line {
-  height: 14px;
-  border-radius: 999px;
-  background: linear-gradient(90deg, #f0e7d7 0%, #fff6e6 50%, #f0e7d7 100%);
-  background-size: 200% 100%;
-  animation: shimmer 1.4s ease-in-out infinite;
-}
-
-.app__rules-skeleton-line--wide {
-  width: 90%;
-}
-
-.app__rules-skeleton-line--short {
-  width: 55%;
-}
-
-@keyframes shimmer {
-  0% {
-    background-position: 200% 0;
+@layer base {
+  :root {
+    font-family: "Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif;
+    line-height: 1.5;
+    font-weight: 400;
+    color: #1b1b1b;
+    background-color: #f7f4ee;
   }
-  100% {
-    background-position: -200% 0;
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
   }
-}
 
-.app__rules-error {
-  margin: 0;
-  font-size: 0.8rem;
-  color: #b33030;
-}
+  body {
+    margin: 0;
+    min-height: 100vh;
+  }
 
-.app__rules-select {
-  display: grid;
-  gap: 6px;
-  font-size: 0.85rem;
-  color: #5b4f43;
-}
-
-.app__rules-select-label {
-  font-size: 0.8rem;
-  color: #7a6a58;
-}
-
-.app__rules-select select {
-  appearance: none;
-  border: 1px solid #e6dfd3;
-  border-radius: 10px;
-  padding: 8px 12px;
-  background: #ffffff;
-  font-size: 0.9rem;
-  color: #2e241c;
+  #root {
+    min-height: 100vh;
+  }
 }

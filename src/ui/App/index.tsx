@@ -76,21 +76,24 @@ export const App = ({ title = 'md-studio' }: Props) => {
   const pathText = buildPathText({ pathValue: planState.path })
 
   return (
-    <main className="app">
-      <section className="app__card">
-        <p className="app__eyebrow">React + Vite</p>
-        <h1 className="app__title">{title}</h1>
-        <p className="app__lead">plan.md の内容を読み込みました。</p>
-        <div className="app__rules">
-          <div className="app__rules-header">
+    <main className="min-h-screen grid place-items-center px-6 py-12">
+      <section className="bg-white border border-[#e6dfd3] rounded-2xl p-8 w-full min-h-[100dvh] shadow-card">
+        <p className="mb-2 text-[0.9rem] tracking-[0.08em] uppercase text-[#6b5d4e]">
+          React + Vite
+        </p>
+        <h1 className="mb-3 text-[2.2rem]">{title}</h1>
+        <p className="text-[#3d3428]">plan.md の内容を読み込みました。</p>
+        <div className="mt-6 border-t border-[#efe6d6] pt-4 grid gap-3">
+          <div className="flex flex-col gap-1 text-[0.9rem] text-[#5b4f43]">
             <span>{headerText}</span>
-            <span className="app__rules-path">{pathText}</span>
+            <span className="text-[0.8rem] text-[#8b7a66]">{pathText}</span>
           </div>
           {planPathList.length ? (
-            <label className="app__rules-select">
-              <span className="app__rules-select-label">読み込むplan.md</span>
+            <label className="grid gap-1.5 text-[0.85rem] text-[#5b4f43]">
+              <span className="text-[0.8rem] text-[#7a6a58]">読み込むplan.md</span>
               <select
-                value={selectedPath}
+                className="appearance-none border border-[#e6dfd3] rounded-[10px] px-3 py-2 bg-white text-[0.9rem] text-[#2e241c]"
+                value={selectedPath ?? ''}
                 onChange={(event) => setSelectedPath(event.target.value)}
               >
                 {planPathList.map((pathValue) => (
@@ -102,16 +105,23 @@ export const App = ({ title = 'md-studio' }: Props) => {
             </label>
           ) : null}
           {planState.loading ? (
-            <div className="app__rules-skeleton" aria-label="Loading plan">
-              <div className="app__rules-skeleton-line app__rules-skeleton-line--wide" />
-              <div className="app__rules-skeleton-line" />
-              <div className="app__rules-skeleton-line app__rules-skeleton-line--short" />
-              <div className="app__rules-skeleton-line" />
+            <div
+              className="border border-[#efe6d6] rounded-xl p-4 bg-[#fbf8f2] grid gap-2.5 min-h-[100dvh]"
+              aria-label="Loading plan"
+            >
+              <div className="h-3.5 rounded-full bg-gradient-to-r from-[#f0e7d7] via-[#fff6e6] to-[#f0e7d7] bg-[length:200%_100%] animate-shimmer w-[90%]" />
+              <div className="h-3.5 rounded-full bg-gradient-to-r from-[#f0e7d7] via-[#fff6e6] to-[#f0e7d7] bg-[length:200%_100%] animate-shimmer w-full" />
+              <div className="h-3.5 rounded-full bg-gradient-to-r from-[#f0e7d7] via-[#fff6e6] to-[#f0e7d7] bg-[length:200%_100%] animate-shimmer w-[55%]" />
+              <div className="h-3.5 rounded-full bg-gradient-to-r from-[#f0e7d7] via-[#fff6e6] to-[#f0e7d7] bg-[length:200%_100%] animate-shimmer w-full" />
             </div>
           ) : (
-            <pre className="app__rules-body">{planState.content}</pre>
+            <pre className="m-0 bg-[#fbf8f2] border border-[#efe6d6] rounded-xl p-4 font-mono text-[0.85rem] leading-[1.6] text-[#2e241c] whitespace-pre-wrap min-h-[100dvh]">
+              {planState.content}
+            </pre>
           )}
-          {planState.error ? <p className="app__rules-error">{planState.error}</p> : null}
+          {planState.error ? (
+            <p className="m-0 text-[0.8rem] text-[#b33030]">{planState.error}</p>
+          ) : null}
         </div>
       </section>
     </main>
