@@ -1,6 +1,10 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@theme {
+  --shadow-card: 0 20px 40px rgba(20, 16, 8, 0.08);
+  --animate-shimmer: shimmer 1.4s ease-in-out infinite;
+}
 
 @layer base {
   :root {
@@ -41,5 +45,14 @@
   .tiptap h2,
   .tiptap h3 {
     scroll-margin-top: 80px;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
   }
 }
