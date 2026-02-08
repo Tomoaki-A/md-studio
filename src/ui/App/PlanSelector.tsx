@@ -1,3 +1,4 @@
+import { appTheme } from "./theme";
 import { buildProjectLabel } from "./scripts";
 
 type Props = {
@@ -7,15 +8,17 @@ type Props = {
 };
 
 const Placeholder = () => (
-  <div className="h-[65px] bg-gradient-to-r from-[#f0e7d7] via-[#fff6e6] to-[#f0e7d7] bg-[length:200%_100%] rounded-md" />
+  <div
+    className={`h-[65px] bg-gradient-to-r ${appTheme.accent.shimmerFrom} ${appTheme.accent.shimmerVia} ${appTheme.accent.shimmerTo} bg-[length:200%_100%] rounded-md`}
+  />
 );
 
 export const PlanSelector = ({ pathList, selectedPath, onSelect }: Props) =>
   pathList.length ? (
-    <label className="grid gap-1.5 text-[0.85rem] text-[#5b4f43]">
-      <span className="text-[0.8rem] text-[#7a6a58]">読み込むplan.md</span>
+    <label className={`grid gap-1.5 text-[0.85rem] ${appTheme.text.muted}`}>
+      <span className={`text-[0.8rem] ${appTheme.text.subtle}`}>読み込むplan.md</span>
       <select
-        className="appearance-none border border-[#e6dfd3] rounded-[10px] px-3 py-2 bg-white text-[0.9rem] text-[#2e241c]"
+        className={`appearance-none border ${appTheme.input.border} rounded-[10px] px-3 py-2 ${appTheme.input.background} text-[0.9rem] ${appTheme.input.text}`}
         value={selectedPath ?? ""}
         onChange={(event) => onSelect(event.target.value)}
       >

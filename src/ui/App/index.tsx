@@ -15,6 +15,7 @@ import { PlanEditor } from "./PlanEditor";
 import { PlanSelector } from "./PlanSelector";
 import { PlanSkeleton } from "./PlanSkeleton";
 import { PlanStatus } from "./PlanStatus";
+import { appTheme } from "./theme";
 
 type Props = {
   title?: string;
@@ -144,10 +145,12 @@ export const App = ({ title = "Markdown Studio" }: Props) => {
   }, [editor]);
 
   return (
-    <main className="min-h-screen grid place-items-center px-6 py-12">
-      <section className="bg-white border border-[#e6dfd3] rounded-2xl p-8 w-full h-full shadow-card flex flex-col">
-        <h1 className="mb-3 text-[2.2rem]">{title}</h1>
-        <div className="mt-6 border-t border-[#efe6d6] pt-4 gap-3 flex flex-col flex-1">
+    <main className={`min-h-screen grid place-items-center px-6 py-12 ${appTheme.page.background}`}>
+      <section
+        className={`border ${appTheme.card.border} rounded-2xl p-8 w-full h-full ${appTheme.card.background} ${appTheme.card.shadow} flex flex-col`}
+      >
+        <h1 className={`mb-3 text-[2.2rem] ${appTheme.text.primary}`}>{title}</h1>
+        <div className={`mt-6 border-t ${appTheme.card.border} pt-4 gap-3 flex flex-col flex-1`}>
           <PlanSelector
             pathList={planPathList}
             selectedPath={selectedPath}
