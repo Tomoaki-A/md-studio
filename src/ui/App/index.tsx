@@ -19,6 +19,13 @@ const resolveSelectedPath = ({
   return firstPath
 }
 
+const buildProjectLabel = ({ pathValue }: { pathValue: string }) => {
+  const segmentList = pathValue.split('/')
+  const baseIndex = segmentList.findIndex((segment) => segment === 'Projects')
+  const projectName = baseIndex >= 0 ? segmentList[baseIndex + 1] : undefined
+  return projectName ?? pathValue
+}
+
 export const App = ({ title = 'Md Studio' }: Props) => {
   const [planState, setPlanState] = useState(getInitialPlanState)
   const [planPathList, setPlanPathList] = useState<Array<string>>([])
@@ -68,7 +75,7 @@ export const App = ({ title = 'Md Studio' }: Props) => {
 
   return (
     <main className="min-h-screen grid place-items-center px-6 py-12">
-      <section className="bg-white border border-[#e6dfd3] rounded-2xl p-8 w-full min-h-[100dvh] shadow-card">
+      <section className="bg-white border border-[#e6dfd3] rounded-2xl p-8 w-full h-full shadow-card">
         <h1 className="mb-3 text-[2.2rem]">{title}</h1>
         <div className="mt-6 border-t border-[#efe6d6] pt-4 grid gap-3">
           {planPathList.length ? (
@@ -80,7 +87,7 @@ export const App = ({ title = 'Md Studio' }: Props) => {
               >
                 {planPathList.map((pathValue) => (
                   <option key={pathValue} value={pathValue}>
-                    {pathValue}
+                    {buildProjectLabel({ pathValue })}
                   </option>
                 ))}
               </select>
