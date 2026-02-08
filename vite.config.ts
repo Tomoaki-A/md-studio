@@ -57,24 +57,15 @@ const getRulesContent = ({ rootPath }: { rootPath: string }): RulesSearchResult 
 }
 
 const createRulesPlugin = ({ rootPath }: { rootPath: string }) => {
-  const virtualModuleId = 'virtual:rules-md'
-  const resolvedVirtualModuleId = '\0' + virtualModuleId
-
   return {
     name: 'rules-md',
-    resolveId: (id: string) => (id === virtualModuleId ? resolvedVirtualModuleId : null),
-    load: (id: string) => {
-      if (id !== resolvedVirtualModuleId) {
-        return null
-      }
-
-      const { content, path: rulesPath } = getRulesContent({ rootPath })
-
-      return [
-        `export const rulesPath = ${JSON.stringify(rulesPath)};`,
-        `const content = ${JSON.stringify(content)};`,
-        'export default content;',
-      ].join('\n')
+    configureServer: (server) => {
+      server.middlewares.use('/__plan', (_req, res) => {
+        const { content, path: rulesPath } = getRulesContent({ rootPath })
+        res.statusCode = 200
+        res.setHeader('Content-Type', 'application/json; charset=utf-8')
+        res.end(JSON.stringify({ content, path: rulesPath }))
+      })
     },
   }
 }
@@ -85,5 +76,10 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react(), createRulesPlugin({ rootPath })],
+    server: {
+      fs: {
+        allow: [rootPath],
+      },
+    },
   }
 })

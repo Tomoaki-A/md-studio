@@ -88,3 +88,9 @@ body {
   color: #2e241c;
   white-space: pre-wrap;
 }
+
+.app__rules-error {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #b33030;
+}
