@@ -1,0 +1,56 @@
+:root {
+  font-family: "Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color: #1b1b1b;
+  background-color: #f7f4ee;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.app {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 48px 24px;
+}
+
+.app__card {
+  background: #ffffff;
+  border: 1px solid #e6dfd3;
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 520px;
+  width: 100%;
+  box-shadow: 0 20px 40px rgba(20, 16, 8, 0.08);
+}
+
+.app__eyebrow {
+  margin: 0 0 8px;
+  color: #6b5d4e;
+  font-size: 0.9rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.app__title {
+  margin: 0 0 12px;
+  font-size: 2.2rem;
+}
+
+.app__lead {
+  margin: 0;
+  font-size: 1rem;
+  color: #3d3428;
+}
