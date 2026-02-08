@@ -1,4 +1,4 @@
-import { defaultPlanState, fetchPlan } from '../../domain/plan'
+import { defaultPlanState, fetchPlan, fetchPlanList } from '../../domain/plan'
 import type { PlanPayload, PlanState } from '../../domain/plan'
 
 const createSuccessState = ({ content, path }: PlanPayload): PlanState => ({
@@ -15,9 +15,9 @@ const createErrorState = ({ message }: { message: string }): PlanState => ({
   loading: false,
 })
 
-export const loadPlanState = async (): Promise<PlanState> => {
+export const loadPlanState = async ({ pathValue }: { pathValue?: string }): Promise<PlanState> => {
   try {
-    const payload = await fetchPlan()
+    const payload = await fetchPlan({ pathValue })
     return createSuccessState(payload)
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error'
@@ -26,3 +26,12 @@ export const loadPlanState = async (): Promise<PlanState> => {
 }
 
 export const getInitialPlanState = (): PlanState => defaultPlanState
+
+export const loadPlanPathList = async (): Promise<Array<string>> => {
+  try {
+    const payload = await fetchPlanList()
+    return payload.paths
+  } catch {
+    return []
+  }
+}

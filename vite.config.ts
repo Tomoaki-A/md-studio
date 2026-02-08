@@ -3,9 +3,9 @@ import path from 'node:path'
 import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 
-type RulesSearchResult = {
+type PlanContentResult = {
   content: string
-  path: string | null
+  path?: string
 }
 
 const safeReadDir = ({ dirPath }: { dirPath: string }) => {
@@ -16,44 +16,56 @@ const safeReadDir = ({ dirPath }: { dirPath: string }) => {
   }
 }
 
-const findRulesFile = ({ dirPath }: { dirPath: string }): string | null => {
+const findPlanFiles = ({ dirPath }: { dirPath: string }): Array<string> => {
   const entries = safeReadDir({ dirPath })
   const matchList = entries
     .filter((entry) => entry.isFile() && entry.name === 'plan.md')
     .map((entry) => path.join(dirPath, entry.name))
-
-  const [match] = matchList
-
-  if (match) {
-    return match
-  }
 
   const dirList = entries
     .filter((entry) => entry.isDirectory())
     .map((entry) => path.join(dirPath, entry.name))
 
   const childMatchList = dirList
-    .map((childDir) => findRulesFile({ dirPath: childDir }))
-    .filter((value): value is string => Boolean(value))
+    .map((childDir) => findPlanFiles({ dirPath: childDir }))
+    .reduce<Array<string>>((acc, list) => acc.concat(list), [])
 
-  const [childMatch] = childMatchList
-
-  return childMatch ?? null
+  return matchList.concat(childMatchList)
 }
 
-const getRulesContent = ({ rootPath }: { rootPath: string }): RulesSearchResult => {
-  const rulesPath = findRulesFile({ dirPath: rootPath })
+const getPlanList = ({ rootPath }: { rootPath: string }) =>
+  findPlanFiles({ dirPath: rootPath }).sort((a, b) => a.localeCompare(b))
 
-  if (!rulesPath) {
+const isPathAllowed = ({ rootPath, targetPath }: { rootPath: string; targetPath: string }) => {
+  const resolvedRoot = path.resolve(rootPath)
+  const resolvedTarget = path.resolve(targetPath)
+  const relativePath = path.relative(resolvedRoot, resolvedTarget)
+
+  return !relativePath.startsWith('..') && !path.isAbsolute(relativePath)
+}
+
+const getPlanContent = ({
+  rootPath,
+  targetPath,
+}: {
+  rootPath: string
+  targetPath?: string
+}): PlanContentResult => {
+  const planPathList = getPlanList({ rootPath })
+  const normalizedTarget = targetPath && isPathAllowed({ rootPath, targetPath }) ? targetPath : undefined
+  const selectedPath =
+    normalizedTarget && planPathList.includes(normalizedTarget) ? normalizedTarget : planPathList[0]
+
+  if (!selectedPath) {
     return {
       content: `plan.md が ${rootPath} 配下で見つかりませんでした。`,
-      path: null,
+      path: undefined,
     }
   }
 
-  const content = fs.readFileSync(rulesPath, 'utf-8')
+  const content = fs.readFileSync(selectedPath, 'utf-8')
 
-  return { content, path: rulesPath }
+  return { content, path: selectedPath }
 }
 
 const createRulesPlugin = ({ rootPath }: { rootPath: string }) => {
@@ -61,10 +73,30 @@ const createRulesPlugin = ({ rootPath }: { rootPath: string }) => {
     name: 'rules-md',
     configureServer: (server) => {
       server.middlewares.use('/__plan', (_req, res) => {
-        const { content, path: rulesPath } = getRulesContent({ rootPath })
+        const url = new URL(_req.url ?? '', 'http://localhost')
+        const requestPath = url.searchParams.get('path') ?? undefined
+
+        if (requestPath && !isPathAllowed({ rootPath, targetPath: requestPath })) {
+          res.statusCode = 400
+          res.setHeader('Content-Type', 'application/json; charset=utf-8')
+          res.end(JSON.stringify({ content: '許可されていないパスです。', path: undefined }))
+          return
+        }
+
+        const { content, path: planPath } = getPlanContent({
+          rootPath,
+          targetPath: requestPath,
+        })
         res.statusCode = 200
         res.setHeader('Content-Type', 'application/json; charset=utf-8')
-        res.end(JSON.stringify({ content, path: rulesPath }))
+        res.end(JSON.stringify({ content, path: planPath ?? null }))
+      })
+
+      server.middlewares.use('/__plans', (_req, res) => {
+        const paths = getPlanList({ rootPath })
+        res.statusCode = 200
+        res.setHeader('Content-Type', 'application/json; charset=utf-8')
+        res.end(JSON.stringify({ paths }))
       })
     },
   }

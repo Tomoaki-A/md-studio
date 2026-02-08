@@ -33,6 +33,7 @@ body {
   padding: 32px;
   width: 100%;
   box-shadow: 0 20px 40px rgba(20, 16, 8, 0.08);
+  min-height: 100%;
 }
 
 .app__eyebrow {
@@ -88,8 +89,64 @@ body {
   white-space: pre-wrap;
 }
 
+.app__rules-skeleton {
+  border: 1px solid #efe6d6;
+  border-radius: 12px;
+  padding: 16px;
+  background: #fbf8f2;
+  display: grid;
+  gap: 10px;
+}
+
+.app__rules-skeleton-line {
+  height: 14px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #f0e7d7 0%, #fff6e6 50%, #f0e7d7 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+.app__rules-skeleton-line--wide {
+  width: 90%;
+}
+
+.app__rules-skeleton-line--short {
+  width: 55%;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
 .app__rules-error {
   margin: 0;
   font-size: 0.8rem;
   color: #b33030;
+}
+
+.app__rules-select {
+  display: grid;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: #5b4f43;
+}
+
+.app__rules-select-label {
+  font-size: 0.8rem;
+  color: #7a6a58;
+}
+
+.app__rules-select select {
+  appearance: none;
+  border: 1px solid #e6dfd3;
+  border-radius: 10px;
+  padding: 8px 12px;
+  background: #ffffff;
+  font-size: 0.9rem;
+  color: #2e241c;
 }

@@ -1,7 +1,8 @@
-import type { PlanPayload } from './types'
+import type { PlanListPayload, PlanPayload } from './types'
 
-export const fetchPlan = async (): Promise<PlanPayload> => {
-  const response = await fetch('/__plan')
+export const fetchPlan = async ({ pathValue }: { pathValue?: string } = {}): Promise<PlanPayload> => {
+  const query = pathValue ? `?path=${encodeURIComponent(pathValue)}` : ''
+  const response = await fetch(`/__plan${query}`)
   if (!response.ok) {
     throw new Error('plan.md の取得に失敗しました。')
   }
@@ -9,5 +10,16 @@ export const fetchPlan = async (): Promise<PlanPayload> => {
   return {
     content: payload.content,
     path: payload.path ?? undefined,
+  }
+}
+
+export const fetchPlanList = async (): Promise<PlanListPayload> => {
+  const response = await fetch('/__plans')
+  if (!response.ok) {
+    throw new Error('plan.md の一覧取得に失敗しました。')
+  }
+  const payload = (await response.json()) as { paths: Array<string> }
+  return {
+    paths: payload.paths,
   }
 }
