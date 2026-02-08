@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
@@ -8,7 +8,7 @@ import {
   getInitialPlanState,
   loadPlanPathList,
   loadPlanState,
-  resolveSelectedPath,
+  resolveSelectedPathByProject,
   savePlanContent,
 } from "./scripts";
 import { PlanEditor } from "./PlanEditor";
@@ -28,7 +28,12 @@ export const App = ({ title = "Markdown Studio" }: Props) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [hasResolvedSelection, setHasResolvedSelection] = useState(false);
   const latestMarkdownRef = useRef<string>("");
+  const projectSlug = useMemo(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("project") ?? undefined;
+  }, []);
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -44,15 +49,33 @@ export const App = ({ title = "Markdown Studio" }: Props) => {
   useEffect(() => {
     let mounted = true;
 
+    if (!hasResolvedSelection || !selectedPath) {
+      return () => {
+        mounted = false;
+      };
+    }
+
     // 外部ファイルの変更を取り込むため、一定間隔で再読込する。
     const updatePlanState = async () => {
+      if (isEditing) {
+        return;
+      }
+      const previousContent = latestMarkdownRef.current;
       const nextState = await loadPlanState({
         pathValue: selectedPath,
       });
       if (mounted) {
-        setPlanState(nextState);
+        setPlanState((prev) => {
+          const sameContent = prev.content === nextState.content;
+          const sameError = prev.error === nextState.error;
+          const samePath = prev.path === nextState.path;
+          if (sameContent && sameError && samePath && prev.loading === nextState.loading) {
+            return prev;
+          }
+          return nextState;
+        });
         latestMarkdownRef.current = nextState.content;
-        if (editor && !isEditing) {
+        if (editor && previousContent !== nextState.content) {
           const html = convertMarkdownToHtml({
             markdown: nextState.content,
           });
@@ -68,7 +91,7 @@ export const App = ({ title = "Markdown Studio" }: Props) => {
       mounted = false;
       window.clearInterval(intervalId);
     };
-  }, [editor, isEditing, selectedPath]);
+  }, [editor, hasResolvedSelection, isEditing, selectedPath]);
 
   useEffect(() => {
     let mounted = true;
@@ -81,11 +104,13 @@ export const App = ({ title = "Markdown Studio" }: Props) => {
       }
       setPlanPathList(nextList);
       setSelectedPath((currentPath) =>
-        resolveSelectedPath({
+        resolveSelectedPathByProject({
           currentPath,
           pathList: nextList,
+          projectSlug,
         }),
       );
+      setHasResolvedSelection(true);
     };
 
     updatePlanList();
@@ -93,7 +118,7 @@ export const App = ({ title = "Markdown Studio" }: Props) => {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [projectSlug]);
 
   useEffect(() => {
     if (!editor || !selectedPath) {
@@ -157,7 +182,7 @@ export const App = ({ title = "Markdown Studio" }: Props) => {
             onSelect={(nextPath) => setSelectedPath(nextPath)}
           />
           <div className="flex-1">
-            {planState.loading || planPathList.length === 0 ? (
+            {planState.loading || planPathList.length === 0 || !hasResolvedSelection ? (
               <PlanSkeleton />
             ) : (
               <PlanEditor editor={editor} />

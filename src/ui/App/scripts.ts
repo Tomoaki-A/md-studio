@@ -83,3 +83,42 @@ export const buildProjectLabel = ({ pathValue }: { pathValue: string }) => {
   const projectName = baseIndex >= 0 ? segmentList[baseIndex + 1] : undefined;
   return projectName ?? pathValue;
 };
+
+const extractProjectSlug = ({ pathValue }: { pathValue: string }) => {
+  const segmentList = pathValue.split("/");
+  const baseIndex = segmentList.findIndex((segment) => segment === "Projects");
+  return baseIndex >= 0 ? segmentList[baseIndex + 1] : undefined;
+};
+
+const resolvePathByProject = ({
+  pathList,
+  projectSlug,
+}: {
+  pathList: Array<string>;
+  projectSlug?: string;
+}) => {
+  if (!projectSlug) {
+    return undefined;
+  }
+  return pathList.find((pathValue) => extractProjectSlug({ pathValue }) === projectSlug);
+};
+
+export const resolveSelectedPathByProject = ({
+  currentPath,
+  pathList,
+  projectSlug,
+}: {
+  currentPath?: string;
+  pathList: Array<string>;
+  projectSlug?: string;
+}) => {
+  if (currentPath && pathList.includes(currentPath)) {
+    return currentPath;
+  }
+  const preferredPath = resolvePathByProject({ pathList, projectSlug });
+  if (preferredPath) {
+    return preferredPath;
+  }
+  const [firstPath] = pathList;
+  return firstPath;
+};
