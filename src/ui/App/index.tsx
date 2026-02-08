@@ -36,7 +36,7 @@ const buildProjectLabel = ({ pathValue }: { pathValue: string }) => {
   return projectName ?? pathValue
 }
 
-export const App = ({ title = 'Md Studio' }: Props) => {
+export const App = ({ title = 'Markdown Studio' }: Props) => {
   const [planState, setPlanState] = useState(getInitialPlanState)
   const [planPathList, setPlanPathList] = useState<Array<string>>([])
   const [selectedPath, setSelectedPath] = useState<string | undefined>(undefined)
@@ -44,8 +44,6 @@ export const App = ({ title = 'Md Studio' }: Props) => {
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const latestMarkdownRef = useRef<string>('')
-  const saveTimerRef = useRef<number | undefined>(undefined)
-
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -71,10 +69,12 @@ export const App = ({ title = 'Md Studio' }: Props) => {
       }
     }
 
+    const intervalId = window.setInterval(updatePlanState, 1000)
     updatePlanState()
 
     return () => {
       mounted = false
+      window.clearInterval(intervalId)
     }
   }, [editor, isEditing, selectedPath])
 
@@ -108,22 +108,15 @@ export const App = ({ title = 'Md Studio' }: Props) => {
       const html = editor.getHTML()
       const markdown = convertHtmlToMarkdown({ html })
       latestMarkdownRef.current = markdown
-
-      if (saveTimerRef.current) {
-        window.clearTimeout(saveTimerRef.current)
-      }
-
-      saveTimerRef.current = window.setTimeout(async () => {
-        setIsSaving(true)
-        setSaveError(null)
-        try {
-          await savePlanContent({ path: selectedPath, content: latestMarkdownRef.current })
-        } catch (error) {
+      setIsSaving(true)
+      setSaveError(null)
+      savePlanContent({ path: selectedPath, content: latestMarkdownRef.current })
+        .catch((error) => {
           setSaveError(error instanceof Error ? error.message : 'Unknown error')
-        } finally {
+        })
+        .finally(() => {
           setIsSaving(false)
-        }
-      }, 800)
+        })
     }
 
     editor.on('update', handleUpdate)
@@ -132,6 +125,21 @@ export const App = ({ title = 'Md Studio' }: Props) => {
       editor.off('update', handleUpdate)
     }
   }, [editor, selectedPath])
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        setIsEditing(false)
+        editor?.commands.blur()
+      }
+    }
+
+    window.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      window.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [editor])
 
   return (
     <main className="min-h-screen grid place-items-center px-6 py-12">
