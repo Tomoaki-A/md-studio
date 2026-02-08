@@ -29,7 +29,7 @@
 
 @layer components {
   .tiptap {
-    min-height: 100dvh;
+    height: 100%;
     outline: none;
   }
 
