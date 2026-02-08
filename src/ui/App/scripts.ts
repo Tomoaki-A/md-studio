@@ -1,5 +1,7 @@
-import { defaultPlanState, fetchPlan, fetchPlanList } from '../../domain/plan'
-import type { PlanPayload, PlanState } from '../../domain/plan'
+import { defaultPlanState, fetchPlan, fetchPlanList, savePlan } from '../../domain/plan'
+import type { PlanPayload, PlanState, SavePlanPayload } from '../../domain/plan'
+import TurndownService from 'turndown'
+import { marked } from 'marked'
 
 const createSuccessState = ({ content, path }: PlanPayload): PlanState => ({
   content,
@@ -34,4 +36,23 @@ export const loadPlanPathList = async (): Promise<Array<string>> => {
   } catch {
     return []
   }
+}
+
+const createTurndownService = () =>
+  new TurndownService({
+    headingStyle: 'atx',
+    codeBlockStyle: 'fenced',
+    emDelimiter: '_',
+  })
+
+export const convertMarkdownToHtml = ({ markdown }: { markdown: string }) =>
+  marked.parse(markdown)
+
+export const convertHtmlToMarkdown = ({ html }: { html: string }) => {
+  const service = createTurndownService()
+  return service.turndown(html)
+}
+
+export const savePlanContent = async ({ path, content }: SavePlanPayload) => {
+  await savePlan({ path, content })
 }

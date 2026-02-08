@@ -98,6 +98,50 @@ const createRulesPlugin = ({ rootPath }: { rootPath: string }) => {
         res.setHeader('Content-Type', 'application/json; charset=utf-8')
         res.end(JSON.stringify({ paths }))
       })
+
+      server.middlewares.use('/__plan-save', (req, res) => {
+        if (req.method !== 'POST') {
+          res.statusCode = 405
+          res.setHeader('Content-Type', 'application/json; charset=utf-8')
+          res.end(JSON.stringify({ ok: false, error: 'Method Not Allowed' }))
+          return
+        }
+
+        let body = ''
+        req.on('data', (chunk) => {
+          body += chunk
+        })
+        req.on('end', () => {
+          try {
+            const payload = JSON.parse(body) as { path?: string; content?: string }
+            const targetPath = payload.path
+            const content = payload.content
+
+            if (!targetPath || typeof content !== 'string') {
+              res.statusCode = 400
+              res.setHeader('Content-Type', 'application/json; charset=utf-8')
+              res.end(JSON.stringify({ ok: false, error: 'Invalid payload' }))
+              return
+            }
+
+            if (!isPathAllowed({ rootPath, targetPath })) {
+              res.statusCode = 400
+              res.setHeader('Content-Type', 'application/json; charset=utf-8')
+              res.end(JSON.stringify({ ok: false, error: 'Invalid path' }))
+              return
+            }
+
+            fs.writeFileSync(targetPath, content, 'utf-8')
+            res.statusCode = 200
+            res.setHeader('Content-Type', 'application/json; charset=utf-8')
+            res.end(JSON.stringify({ ok: true }))
+          } catch (error) {
+            res.statusCode = 500
+            res.setHeader('Content-Type', 'application/json; charset=utf-8')
+            res.end(JSON.stringify({ ok: false, error: error instanceof Error ? error.message : 'Unknown error' }))
+          }
+        })
+      })
     },
   }
 }

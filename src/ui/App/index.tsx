@@ -1,5 +1,15 @@
-import { useEffect, useState } from 'react'
-import { getInitialPlanState, loadPlanPathList, loadPlanState } from './scripts'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { EditorContent, useEditor } from '@tiptap/react'
+import StarterKit from '@tiptap/starter-kit'
+import Placeholder from '@tiptap/extension-placeholder'
+import {
+  convertHtmlToMarkdown,
+  convertMarkdownToHtml,
+  getInitialPlanState,
+  loadPlanPathList,
+  loadPlanState,
+  savePlanContent,
+} from './scripts'
 
 type Props = {
   title?: string
@@ -30,6 +40,21 @@ export const App = ({ title = 'Md Studio' }: Props) => {
   const [planState, setPlanState] = useState(getInitialPlanState)
   const [planPathList, setPlanPathList] = useState<Array<string>>([])
   const [selectedPath, setSelectedPath] = useState<string | undefined>(undefined)
+  const [isEditing, setIsEditing] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const latestMarkdownRef = useRef<string>('')
+  const saveTimerRef = useRef<number | undefined>(undefined)
+
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+      Placeholder.configure({ placeholder: 'plan.md を編集できます。' }),
+    ],
+    content: '',
+    onFocus: () => setIsEditing(true),
+    onBlur: () => setIsEditing(false),
+  })
 
   useEffect(() => {
     let mounted = true
@@ -38,17 +63,20 @@ export const App = ({ title = 'Md Studio' }: Props) => {
       const nextState = await loadPlanState({ pathValue: selectedPath })
       if (mounted) {
         setPlanState(nextState)
+        latestMarkdownRef.current = nextState.content
+        if (editor && !isEditing) {
+          const html = convertMarkdownToHtml({ markdown: nextState.content })
+          editor.commands.setContent(html, false)
+        }
       }
     }
 
-    const intervalId = window.setInterval(updatePlanState, 1500)
     updatePlanState()
 
     return () => {
       mounted = false
-      window.clearInterval(intervalId)
     }
-  }, [selectedPath])
+  }, [editor, isEditing, selectedPath])
 
   useEffect(() => {
     let mounted = true
@@ -64,14 +92,46 @@ export const App = ({ title = 'Md Studio' }: Props) => {
       )
     }
 
-    const intervalId = window.setInterval(updatePlanList, 5000)
     updatePlanList()
 
     return () => {
       mounted = false
-      window.clearInterval(intervalId)
     }
   }, [])
+
+  useEffect(() => {
+    if (!editor || !selectedPath) {
+      return
+    }
+
+    const handleUpdate = () => {
+      const html = editor.getHTML()
+      const markdown = convertHtmlToMarkdown({ html })
+      latestMarkdownRef.current = markdown
+
+      if (saveTimerRef.current) {
+        window.clearTimeout(saveTimerRef.current)
+      }
+
+      saveTimerRef.current = window.setTimeout(async () => {
+        setIsSaving(true)
+        setSaveError(null)
+        try {
+          await savePlanContent({ path: selectedPath, content: latestMarkdownRef.current })
+        } catch (error) {
+          setSaveError(error instanceof Error ? error.message : 'Unknown error')
+        } finally {
+          setIsSaving(false)
+        }
+      }, 800)
+    }
+
+    editor.on('update', handleUpdate)
+
+    return () => {
+      editor.off('update', handleUpdate)
+    }
+  }, [editor, selectedPath])
 
   return (
     <main className="min-h-screen grid place-items-center px-6 py-12">
@@ -80,6 +140,7 @@ export const App = ({ title = 'Md Studio' }: Props) => {
         <div className="mt-6 border-t border-[#efe6d6] pt-4 grid gap-3">
           {planPathList.length ? (
             <label className="grid gap-1.5 text-[0.85rem] text-[#5b4f43]">
+              <span className="text-[0.8rem] text-[#7a6a58]">読み込むplan.md</span>
               <select
                 className="appearance-none border border-[#e6dfd3] rounded-[10px] px-3 py-2 bg-white text-[0.9rem] text-[#2e241c]"
                 value={selectedPath ?? ''}
@@ -104,13 +165,15 @@ export const App = ({ title = 'Md Studio' }: Props) => {
               <div className="h-3.5 rounded-full bg-gradient-to-r from-[#f0e7d7] via-[#fff6e6] to-[#f0e7d7] bg-[length:200%_100%] animate-shimmer w-full" />
             </div>
           ) : (
-            <pre className="m-0 bg-[#fbf8f2] border border-[#efe6d6] rounded-xl p-4 font-mono text-[0.85rem] leading-[1.6] text-[#2e241c] whitespace-pre-wrap">
-              {planState.content}
-            </pre>
+            <div className="border border-[#efe6d6] rounded-xl p-4 bg-[#fbf8f2] min-h-[100dvh]">
+              <EditorContent editor={editor} className="tiptap prose max-w-none" />
+            </div>
           )}
           {planState.error ? (
             <p className="m-0 text-[0.8rem] text-[#b33030]">{planState.error}</p>
           ) : null}
+          {isSaving ? <p className="m-0 text-[0.8rem] text-[#7a6a58]">保存中...</p> : null}
+          {saveError ? <p className="m-0 text-[0.8rem] text-[#b33030]">{saveError}</p> : null}
         </div>
       </section>
     </main>

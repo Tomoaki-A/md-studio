@@ -1,4 +1,4 @@
-import type { PlanListPayload, PlanPayload } from './types'
+import type { PlanListPayload, PlanPayload, SavePlanPayload } from './types'
 
 export const fetchPlan = async ({ pathValue }: { pathValue?: string } = {}): Promise<PlanPayload> => {
   const query = pathValue ? `?path=${encodeURIComponent(pathValue)}` : ''
@@ -21,5 +21,16 @@ export const fetchPlanList = async (): Promise<PlanListPayload> => {
   const payload = (await response.json()) as { paths: Array<string> }
   return {
     paths: payload.paths,
+  }
+}
+
+export const savePlan = async ({ path, content }: SavePlanPayload): Promise<void> => {
+  const response = await fetch('/__plan-save', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ path, content }),
+  })
+  if (!response.ok) {
+    throw new Error('plan.md の保存に失敗しました。')
   }
 }
