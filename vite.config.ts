@@ -236,6 +236,8 @@ export default defineConfig(({ mode }) => {
       }),
     ],
     server: {
+      port: 12345,
+      strictPort: true,
       fs: {
         allow: [rootPath],
       },
