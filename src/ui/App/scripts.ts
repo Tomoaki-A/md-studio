@@ -62,3 +62,24 @@ export const savePlanContent = async ({ path, content }: SavePlanPayload) => {
     content,
   });
 };
+
+export const resolveSelectedPath = ({
+  currentPath,
+  pathList,
+}: {
+  currentPath?: string;
+  pathList: Array<string>;
+}) => {
+  if (currentPath && pathList.includes(currentPath)) {
+    return currentPath;
+  }
+  const [firstPath] = pathList;
+  return firstPath;
+};
+
+export const buildProjectLabel = ({ pathValue }: { pathValue: string }) => {
+  const segmentList = pathValue.split("/");
+  const baseIndex = segmentList.findIndex((segment) => segment === "Projects");
+  const projectName = baseIndex >= 0 ? segmentList[baseIndex + 1] : undefined;
+  return projectName ?? pathValue;
+};

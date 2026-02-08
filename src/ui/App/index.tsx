@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { EditorContent, useEditor } from "@tiptap/react";
+import { useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import {
@@ -8,32 +8,16 @@ import {
   getInitialPlanState,
   loadPlanPathList,
   loadPlanState,
+  resolveSelectedPath,
   savePlanContent,
 } from "./scripts";
+import { PlanEditor } from "./PlanEditor";
+import { PlanSelector } from "./PlanSelector";
+import { PlanSkeleton } from "./PlanSkeleton";
+import { PlanStatus } from "./PlanStatus";
 
 type Props = {
   title?: string;
-};
-
-const resolveSelectedPath = ({
-  currentPath,
-  pathList,
-}: {
-  currentPath?: string;
-  pathList: Array<string>;
-}) => {
-  if (currentPath && pathList.includes(currentPath)) {
-    return currentPath;
-  }
-  const [firstPath] = pathList;
-  return firstPath;
-};
-
-const buildProjectLabel = ({ pathValue }: { pathValue: string }) => {
-  const segmentList = pathValue.split("/");
-  const baseIndex = segmentList.findIndex((segment) => segment === "Projects");
-  const projectName = baseIndex >= 0 ? segmentList[baseIndex + 1] : undefined;
-  return projectName ?? pathValue;
 };
 
 export const App = ({ title = "Markdown Studio" }: Props) => {
@@ -59,6 +43,7 @@ export const App = ({ title = "Markdown Studio" }: Props) => {
   useEffect(() => {
     let mounted = true;
 
+    // 外部ファイルの変更を取り込むため、一定間隔で再読込する。
     const updatePlanState = async () => {
       const nextState = await loadPlanState({
         pathValue: selectedPath,
@@ -87,6 +72,7 @@ export const App = ({ title = "Markdown Studio" }: Props) => {
   useEffect(() => {
     let mounted = true;
 
+    // 参照可能な plan 一覧を取得し、選択状態を安定させる。
     const updatePlanList = async () => {
       const nextList = await loadPlanPathList();
       if (!mounted) {
@@ -113,6 +99,7 @@ export const App = ({ title = "Markdown Studio" }: Props) => {
       return;
     }
 
+    // エディタの更新ごとに保存し、ファイル内容と同期する。
     const handleUpdate = () => {
       const html = editor.getHTML();
       const markdown = convertHtmlToMarkdown({
@@ -141,6 +128,7 @@ export const App = ({ title = "Markdown Studio" }: Props) => {
   }, [editor, selectedPath]);
 
   useEffect(() => {
+    // タブ切り替え時に編集中状態を解除する。
     const handleVisibilityChange = () => {
       if (document.visibilityState === "hidden") {
         setIsEditing(false);
@@ -160,54 +148,19 @@ export const App = ({ title = "Markdown Studio" }: Props) => {
       <section className="bg-white border border-[#e6dfd3] rounded-2xl p-8 w-full h-full shadow-card flex flex-col">
         <h1 className="mb-3 text-[2.2rem]">{title}</h1>
         <div className="mt-6 border-t border-[#efe6d6] pt-4 gap-3 flex flex-col flex-1">
-          {planPathList.length ? (
-            <label className="grid gap-1.5 text-[0.85rem] text-[#5b4f43]">
-              <span className="text-[0.8rem] text-[#7a6a58]">読み込むplan.md</span>
-              <select
-                className="appearance-none border border-[#e6dfd3] rounded-[10px] px-3 py-2 bg-white text-[0.9rem] text-[#2e241c]"
-                value={selectedPath ?? ""}
-                onChange={(event) => setSelectedPath(event.target.value)}
-              >
-                {planPathList.map((pathValue) => (
-                  <option key={pathValue} value={pathValue}>
-                    {buildProjectLabel({
-                      pathValue,
-                    })}
-                  </option>
-                ))}
-              </select>
-            </label>
-          ) : (
-            <div className="h-[65px] bg-gradient-to-r from-[#f0e7d7] via-[#fff6e6] to-[#f0e7d7] bg-[length:200%_100%] rounded-md" />
-          )}
+          <PlanSelector
+            pathList={planPathList}
+            selectedPath={selectedPath}
+            onSelect={(nextPath) => setSelectedPath(nextPath)}
+          />
           <div className="flex-1">
             {planState.loading || planPathList.length === 0 ? (
-              <div
-                className="border border-[#efe6d6] rounded-xl p-4 bg-[#fbf8f2] flex flex-col gap-1 h-full"
-                aria-label="Loading plan"
-              >
-                {Array.from({
-                  length: 10,
-                }).map((_, index) => (
-                  <div key={index} className="flex flex-col gap-4">
-                    <div className="h-3.5 rounded-full bg-gradient-to-r from-[#f0e7d7] via-[#fff6e6] to-[#f0e7d7] bg-[length:200%_100%] animate-shimmer w-full" />
-                  </div>
-                ))}
-              </div>
+              <PlanSkeleton />
             ) : (
-              <div className="border border-[#efe6d6] rounded-xl p-8 bg-[#fbf8f2] h-full">
-                <EditorContent
-                  editor={editor}
-                  className="tiptap prose prose-sm max-w-none text-[0.8rem] leading-4"
-                />
-              </div>
+              <PlanEditor editor={editor} />
             )}
           </div>
-          {planState.error ? (
-            <p className="m-0 text-[0.8rem] text-[#b33030]">{planState.error}</p>
-          ) : null}
-          {isSaving ? <p className="m-0 text-[0.8rem] text-[#7a6a58]">保存中...</p> : null}
-          {saveError ? <p className="m-0 text-[0.8rem] text-[#b33030]">{saveError}</p> : null}
+          <PlanStatus isSaving={isSaving} loadError={planState.error} saveError={saveError} />
         </div>
       </section>
     </main>
